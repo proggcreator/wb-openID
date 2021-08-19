@@ -1,41 +1,35 @@
 package handler
 
 import (
-	"strings"
+	"bytes"
+	"fmt"
+	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	authorizationHeader = "Authorization"
-	userCtx             = "userId"
-	ApiName             = "test-finance-microservices-api"
-	ApiSecret           = "test-finance-microservices-api_secret"
-)
+type UserAuth struct {
+	ClientId     string
+	ClientSecret string
+	GrandType    string
+}
 
 func (h *Handler) userIdentity(c *gin.Context) {
-	header := c.GetHeader(authorizationHeader)
-	if header == "" {
-		//newErrorResponse(c, http.StatusUnauthorized, "empty auth header")
-		return
+	curUserId := UserAuth{
+		ClientId:     "finance-test-client",
+		ClientSecret: "testsecret",
 	}
+	//post request application/x-www-form-urlencoded
+	buffer := new(bytes.Buffer)
+	params := url.Values{}
+	params.Set("client_id", curUserId.ClientId)
+	params.Set("client_secret", curUserId.ClientSecret)
+	buffer.WriteString(params.Encode())
+	req, _ := http.NewRequest("POST", "https://payments.wildberries.ru/authtest/connect/token", buffer)
+	req.Header.Set("content-type", "application/x-www-form-urlencoded")
 
-	headerParts := strings.Split(header, " ")
-	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-		//newErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
-		return
-	}
+	fmt.Fprintln(c.Writer, "Hello")
+	fmt.Fprintln(c.Writer, req)
 
-	if len(headerParts[1]) == 0 {
-		//newErrorResponse(c, http.StatusUnauthorized, "token is empty")
-		return
-	}
-
-	/*userId, err := h.Authorization.ParseToken(headerParts[1])
-	if err != nil {
-		newErrorResponse(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-
-	c.Set(userCtx, userId)*/
 }
