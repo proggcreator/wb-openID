@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -62,6 +63,18 @@ func (h *Handler) showAll(c *gin.Context) {
 		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
 		return
 	}
+	//parse access token
 
-	fmt.Fprintln(c.Writer, t)
+	tokenString := t.Access_token
+	claims := jwt.MapClaims{}
+	_, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("Hello"), nil
+	})
+	keyclaims := "client_claims"
+
+	x := claims[keyclaims]
+
+	fmt.Println(x.([]string))
+
+	//fmt.Printf(string(tokenn))
 }
