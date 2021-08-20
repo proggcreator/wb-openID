@@ -9,14 +9,13 @@ func NewHandler() *Handler {
 	return &Handler{}
 }
 func (h *Handler) InitRoutes() *gin.Engine {
-	//router := gin.New()
-	router := gin.Default()
+	router := gin.New()
 
 	//midleware
-	//aut := router.Group("/")
+	aut := router.Group("/", h.userIdentity)
 
 	{
-		router.POST("/api/v1/all", h.showAll)
+		aut.POST("/api/v1/all", h.showAll)
 	}
 	return router
 }
