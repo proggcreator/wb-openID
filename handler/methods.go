@@ -6,9 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	NeedClaimes = "world"
 )
 
 type MyStruct struct {
@@ -20,6 +26,37 @@ type MyToken struct {
 	Access_token string
 	Expires_in   int
 	Token_type   string
+}
+
+func ParseAccess(t MyToken) bool {
+	//parse access token
+	flagClaims := false
+	flagLifetime := false
+	tokenString := t.Access_token
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("Hello"), nil
+	})
+	if err != nil {
+
+	}
+	keyclaims := "client_claims"
+	//for range over claims interface
+	s := reflect.ValueOf(claims[keyclaims])
+	for i := 0; i < s.Len(); i++ {
+		//check needed claims
+		if s.Index(i).Elem().String() == NeedClaimes {
+			flagClaims = true
+		}
+	}
+	//check a token lifetime
+	keyExp := "exp"
+	exp := reflect.ValueOf(claims[keyExp]).Elem().Int()
+	if time.Now().Unix() < exp*1000 {
+		flagLifetime = true
+	}
+
+	return flagClaims
 }
 
 func (h *Handler) showAll(c *gin.Context) {
@@ -63,18 +100,13 @@ func (h *Handler) showAll(c *gin.Context) {
 		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//parse access token
-
-	tokenString := t.Access_token
-	claims := jwt.MapClaims{}
-	_, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("Hello"), nil
-	})
-	keyclaims := "client_claims"
-
-	x := claims[keyclaims]
-
-	fmt.Println(x.([]string))
+	//if neened claims is exist
+	if ParseAccess(t) {
+		fmt.Println("YYYYYYYYYYYYYYYy")
+		return
+	} else {
+		fmt.Println("NNNNNNNNNNNNNNNNN")
+	}
 
 	//fmt.Printf(string(tokenn))
 }
